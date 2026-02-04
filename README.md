@@ -46,21 +46,23 @@ echo "KVM_GID=108" > .env  # Replace 108 with your actual GID
 
 ## Features
 
-- 🐳 Simple Alpine container with Docker socket mounting (no Docker-in-Docker)
+- 🐳 Docker-in-Docker (DinD) setup with Alpine Linux base
+- ⚡ KVM hardware virtualization support via `/dev/kvm` device
 - 🔒 Isolated sandbox environment for safe code execution
 - 🚀 Microsandbox server with development mode
 - 🐍 Python client library for easy interaction
+- 📦 Full Docker daemon inside container for spawning microVMs
 
 ## Architecture
 
-This setup enables **KVM inside Docker** by:
-- ✅ Mounting `/dev/kvm` device from host
-- ✅ Adding container user to host's `kvm` group (GID matching required)
-- ✅ Using host Docker socket for container management
-- ✅ No privileged mode needed (more secure than `--privileged`)
-- ✅ QEMU/KVM for hardware-accelerated virtualization
+This setup uses **Docker-in-Docker (DinD) with KVM support**:
+- 🐳 **Docker-in-Docker**: Full Docker daemon running inside container (`docker:27-dind`)
+- ⚡ **KVM device mounting**: `/dev/kvm` passed from host for hardware virtualization
+- 🔐 **Group permissions**: Container added to host's `kvm` group (GID matching)
+- 🚀 **Privileged mode**: Required for Docker daemon to function properly
+- 💻 **QEMU/KVM**: Hardware-accelerated microVMs via libkrun
 
-**Key insight**: The trick is matching the container's kvm group GID to the host's kvm GID using `group_add` in docker-compose.
+**Why Docker-in-Docker**: Microsandbox spawns its own containers, so it needs a Docker daemon. DinD provides full isolation and control.
 
 ## Quick Start
 

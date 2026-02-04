@@ -1,18 +1,15 @@
 services:
   microsandbox:
     build: .
+    privileged: true
     ports:
       - "5555:5555"
-    volumes:
-      # Mount host Docker socket
-      - /var/run/docker.sock:/var/run/docker.sock
     devices:
       # Pass /dev/kvm device for KVM acceleration
       - /dev/kvm:/dev/kvm
     group_add:
-      # Add container to host's kvm group (get GID with: getent group kvm | cut -d: -f3)
+      # Add container to host's kvm group (get GID: getent group kvm | cut -d: -f3)
       - "${KVM_GID:-108}"
     restart: unless-stopped
     environment:
-      # Enable KVM acceleration
       - KVM_ENABLED=1
