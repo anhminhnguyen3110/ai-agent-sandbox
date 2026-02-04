@@ -4,20 +4,45 @@ Docker-based microsandbox environment for running isolated Python code execution
 
 ## ⚠️ CRITICAL: KVM Virtualization Requirement
 
-**Microsandbox requires KVM/libkrun virtualization** which is **NOT available in Docker Desktop on Windows**.
+**Microsandbox requires KVM/libkrun virtualization** to run microVMs.
 
 ### ✅ Supported Platforms:
-- **WSL2 with Docker** (recommended for Windows users)
-- **Native Linux** with KVM support
-- **Bare-metal servers**: Scaleway, OVHcloud, Hetzner, Vultr
-- **Cloud VMs with nested virtualization**: DigitalOcean, Google Cloud (with flag), Azure Dv3/Ev3
-- **macOS**: Apple Silicon only (M1/M2/M3/M4)
+
+#### Option 1: WSL2 with Docker (Windows)
+Best option for Windows users - native Linux kernel with KVM support:
+```bash
+# In WSL2
+getent group kvm | cut -d: -f3  # Get KVM GID
+echo "KVM_GID=108" > .env        # Set the GID
+sudo docker-compose up -d --build
+```
+
+#### Option 2: Native Linux with KVM
+Host must have KVM enabled. Verify with:
+```bash
+# Check KVM availability
+ls -la /dev/kvm
+# Should show: crw-rw---- 1 root kvm ...
+
+# Get KVM group ID
+getent group kvm | cut -d: -f3
+
+# Set in .env file
+echo "KVM_GID=108" > .env  # Replace 108 with your actual GID
+```
+
+#### Option 3: Cloud Servers
+- **Bare-metal**: Scaleway, OVHcloud, Hetzner, Vultr (best performance)
+- **Nested virtualization VMs**: DigitalOcean, Google Cloud (enable flag), Azure Dv3/Ev3
 
 ### ❌ Will NOT Work:
-- Docker Desktop on Windows → exits with code 139 (segmentation fault)
-- Containers without KVM/nested virtualization support
+- ❌ Docker Desktop on Windows (no /dev/kvm device)
+- ❌ macOS without Apple Silicon
+- ❌ Containers without KVM device access
 
-**Source**: [microsandbox CLOUD_HOSTING.md](https://github.com/zerocore-ai/microsandbox/blob/main/CLOUD_HOSTING.md)
+**Sources**: 
+- [microsandbox CLOUD_HOSTING.md](https://github.com/zerocore-ai/microsandbox/blob/main/CLOUD_HOSTING.md)
+- [StackOverflow: KVM in Docker](https://stackoverflow.com/questions/48422001)
 
 ## Features
 
@@ -28,11 +53,14 @@ Docker-based microsandbox environment for running isolated Python code execution
 
 ## Architecture
 
-This setup **mounts the host Docker socket** into the container instead of running Docker-in-Docker:
-- ✅ Simpler and more reliable
-- ✅ Better performance
-- ✅ No privileged mode required
-- ✅ Uses host's Docker daemon directly
+This setup enables **KVM inside Docker** by:
+- ✅ Mounting `/dev/kvm` device from host
+- ✅ Adding container user to host's `kvm` group (GID matching required)
+- ✅ Using host Docker socket for container management
+- ✅ No privileged mode needed (more secure than `--privileged`)
+- ✅ QEMU/KVM for hardware-accelerated virtualization
+
+**Key insight**: The trick is matching the container's kvm group GID to the host's kvm GID using `group_add` in docker-compose.
 
 ## Quick Start
 
