@@ -1,7 +1,9 @@
 services:
   microsandbox:
     build: .
-    privileged: true
     ports:
       - "5555:5555"
+    volumes:
+      # Mount host Docker socket (no Docker-in-Docker needed)
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped

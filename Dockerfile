@@ -1,7 +1,7 @@
-FROM docker:27-dind
+FROM alpine:3.21
 
-# Install glibc compatibility for microsandbox
-RUN apk add --no-cache curl perl-utils libgcc libstdc++ wget libc6-compat && \
+# Install Docker client only (not daemon) + dependencies for microsandbox
+RUN apk add --no-cache docker-cli curl perl-utils libgcc libstdc++ wget libc6-compat && \
     wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub && \
     wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-2.35-r1.apk && \
     wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-bin-2.35-r1.apk && \
@@ -15,12 +15,9 @@ RUN apk add --no-cache curl perl-utils libgcc libstdc++ wget libc6-compat && \
 # Add microsandbox to PATH
 ENV PATH="/root/.local/bin:${PATH}"
 
-# Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
 # Expose port
 EXPOSE 5555
 
-# Use custom entrypoint
-ENTRYPOINT ["/entrypoint.sh"]
+# Start microsandbox server directly (uses host Docker via mounted socket)
+CMD ["/root/.local/bin/msb", "server", "start", "--dev", "--host", "0.0.0.0"]
+

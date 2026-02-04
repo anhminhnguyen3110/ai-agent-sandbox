@@ -21,29 +21,42 @@ Docker-based microsandbox environment for running isolated Python code execution
 
 ## Features
 
-- 🐳 Docker-in-Docker setup with Alpine Linux (optimized, no apt required)
+- 🐳 Simple Alpine container with Docker socket mounting (no Docker-in-Docker)
 - 🔒 Isolated sandbox environment for safe code execution
 - 🚀 Microsandbox server with development mode
 - 🐍 Python client library for easy interaction
 
+## Architecture
+
+This setup **mounts the host Docker socket** into the container instead of running Docker-in-Docker:
+- ✅ Simpler and more reliable
+- ✅ Better performance
+- ✅ No privileged mode required
+- ✅ Uses host's Docker daemon directly
+
 ## Quick Start
 
-### Using Docker Compose
+### Using WSL2 (Required for Windows)
 
 ```bash
-docker-compose up -d --build
+# 1. Enter WSL2
+wsl -d Ubuntu
+
+# 2. Install Docker in WSL2
+curl -fsSL https://get.docker.com | sudo sh
+sudo service docker start
+
+# 3. Navigate to project
+cd /mnt/c/Users/admin/Desktop/microsandbox
+
+# 4. Start microsandbox
+sudo docker-compose up -d --build
+
+# 5. Verify it's running
+sudo docker-compose logs -f
 ```
 
 The microsandbox server will be available at `http://localhost:5555`
-
-### Using WSL2 (Recommended for Windows)
-
-```bash
-wsl -d Ubuntu
-curl -fsSL https://get.docker.com | sudo sh
-sudo service docker start
-sudo docker-compose up -d --build
-```
 
 ### Test with Python
 
